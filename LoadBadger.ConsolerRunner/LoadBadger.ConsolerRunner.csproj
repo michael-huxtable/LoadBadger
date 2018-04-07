@@ -58,6 +58,8 @@
   <ItemGroup>
     <Compile Include="FrequencyLoop.cs" />
     <Compile Include="HighResolutionDateTime.cs" />
+    <Compile Include="HttpExecutor.cs" />
+    <Compile Include="PerSecondHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestTime.cs" />

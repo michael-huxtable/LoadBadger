@@ -7,7 +7,7 @@ namespace LoadBadger.ConsolerRunner
 {
     public class TimedHandler : DelegatingHandler
     {
-        public TimedHandler() : base(new HttpClientHandler())
+        public TimedHandler() : base(new HttpClientHandler() { })
         {}
 
         public ConcurrentBag<RequestTime> Requests { get; } = new ConcurrentBag<RequestTime>();
