@@ -16,17 +16,10 @@ namespace LoadBadger.ConsolerRunner
 
             Task.Run(() =>
             {
-                const int fps = 30;
+                var ctx = new CancellationTokenSource();
 
-                var looper = new FrequencyLoop(fps: fps);
-                var timeScheduler = new PerSecondHandler(fps: fps, perSecond: 100, executor: httpExecutor);
-
-                looper.Update += (sender, eventArgs) =>
-                {
-                    tasks.AddRange(timeScheduler.ExecuteAsync());
-                };
-
-                looper.Exeucte();
+                var perSecond = new PerSecondHandlerLoop(33, TimeSpan.FromSeconds(30), httpExecutor);
+                tasks = perSecond.Exeucte(ctx.Token);
             });
 
             Task.Run(() =>

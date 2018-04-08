@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LoadBadger.ConsolerRunner
 {
-    public class FrequencyLoop
+    public abstract class FrequencyLoop
     {
         private int _spinCounter;
         private readonly double _desiredFps;
@@ -12,21 +14,20 @@ namespace LoadBadger.ConsolerRunner
 
         public Stopwatch Stopwatch { get; } = new Stopwatch();
 
-        public FrequencyLoop(double fps)
+        protected FrequencyLoop(double fps)
         {
             _desiredFps = fps;
             _frameTime = TimeSpan.FromSeconds(1.0 / fps);
         }
         
-        public void Exeucte()
+        public List<Task> Exeucte(CancellationToken cancellationToken)
         {
             Stopwatch.Start();
             var last = Stopwatch.Elapsed;
             var updateTime = new TimeSpan(0);
+            var tasks = new List<Task>();
 
-            //TODO: Make Cancellable
-
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 var delta = Stopwatch.Elapsed - last;
                 last += delta;
@@ -35,7 +36,7 @@ namespace LoadBadger.ConsolerRunner
                 while (updateTime > _frameTime)
                 {
                     updateTime -= _frameTime;
-                    OnUpdate();
+                    tasks.AddRange(OnUpdate());
                     _spinCounter = 0;
                 }
                 
@@ -47,13 +48,10 @@ namespace LoadBadger.ConsolerRunner
                 // spin to wait out the timer.
                 Thread.Sleep(1);
             }
+
+            return tasks;
         }
 
-        public event EventHandler Update;
-
-        protected virtual void OnUpdate()
-        {
-            Update?.Invoke(this, EventArgs.Empty);
-        }
+        protected abstract IEnumerable<Task> OnUpdate();
     }
 }

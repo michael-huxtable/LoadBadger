@@ -1,30 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LoadBadger.ConsolerRunner
 {
-    public class PerSecondHandler
+    public class PerSecondHandlerLoop : FrequencyLoop
     {
         private readonly HttpExecutor _executor;
-        private readonly decimal _perFrame;
 
-        public PerSecondHandler(decimal fps, decimal perSecond, HttpExecutor executor)
+        private readonly decimal _excutionsPerFrame;
+        private readonly decimal _expectedExecutions;
+
+        public PerSecondHandlerLoop(decimal perSecond, TimeSpan duration, HttpExecutor executor) : base(480)
         {
             _executor = executor;
-            _perFrame = perSecond / fps;
+            _excutionsPerFrame = perSecond / 480;
+            _expectedExecutions = perSecond * (decimal) duration.TotalSeconds;
         }
 
+        private decimal _totalExecutions;
         private decimal _remainder;
-        
-        public IEnumerable<Task> ExecuteAsync() 
+
+        protected override IEnumerable<Task> OnUpdate()
         {
-            decimal current = _perFrame + _remainder;
+            if (_totalExecutions >= _expectedExecutions)
+            {
+                yield break;
+            }
+
+            decimal current = _excutionsPerFrame + _remainder;
             decimal truncated = Math.Truncate(current);
-            _remainder += _perFrame - truncated;
-            
+            _remainder += _excutionsPerFrame - truncated;
+
             for (int i = 0; i < truncated; ++i)
             {
+                _totalExecutions++;
                 yield return _executor.ExecuteAsync();
             }
         }
