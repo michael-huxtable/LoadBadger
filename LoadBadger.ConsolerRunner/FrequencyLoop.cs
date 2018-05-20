@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace LoadBadger.ConsolerRunner
             _frameTime = TimeSpan.FromSeconds(1.0 / fps);
         }
         
-        public List<Task> Exeucte(CancellationToken cancellationToken)
+        public List<Task> Exeucte(CancellationTokenSource cancellationToken)
         {
             Stopwatch.Start();
             var last = Stopwatch.Elapsed;
@@ -36,7 +37,8 @@ namespace LoadBadger.ConsolerRunner
                 while (updateTime > _frameTime)
                 {
                     updateTime -= _frameTime;
-                    tasks.AddRange(OnUpdate());
+                    var results = OnUpdate(cancellationToken).ToList();
+                    tasks.AddRange(results);
                     _spinCounter = 0;
                 }
                 
@@ -52,6 +54,6 @@ namespace LoadBadger.ConsolerRunner
             return tasks;
         }
 
-        protected abstract IEnumerable<Task> OnUpdate();
+        protected abstract IEnumerable<Task> OnUpdate(CancellationTokenSource cancellationTokenSource);
     }
 }

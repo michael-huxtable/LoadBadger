@@ -18,8 +18,11 @@ namespace LoadBadger.ConsolerRunner
             {
                 var ctx = new CancellationTokenSource();
 
-                var perSecond = new PerSecondHandlerLoop(33, TimeSpan.FromSeconds(30), httpExecutor);
-                tasks = perSecond.Exeucte(ctx.Token);
+                var ramped = new LinearRampedHandlerLoop(httpExecutor);
+                ramped.Execute(ctx);
+
+                //var perSecond = new PerSecondHandlerLoop(10, TimeSpan.FromSeconds(30), httpExecutor);
+                //tasks = perSecond.Exeucte(ctx.Token);
             });
 
             Task.Run(() =>
@@ -41,8 +44,7 @@ namespace LoadBadger.ConsolerRunner
                         .Average(r => r.Count()));
 
                     Console.WriteLine("Requests < 800ms: " + snapshot.Count(r => r.Total.TotalMilliseconds < 800));
-                    Console.WriteLine("Requests > 800ms <= 1000ms: " + snapshot.Count(r =>
-                                          r.Total.TotalMilliseconds > 800 && r.Total.TotalMilliseconds <= 1000));
+                    Console.WriteLine("Requests > 800ms <= 1000ms: " + snapshot.Count(r => r.Total.TotalMilliseconds > 800 && r.Total.TotalMilliseconds <= 1000));
                     Console.WriteLine("Requests > 1000ms: " + snapshot.Count(r => r.Total.TotalMilliseconds > 1000));
 
                     Thread.Sleep(1000);
