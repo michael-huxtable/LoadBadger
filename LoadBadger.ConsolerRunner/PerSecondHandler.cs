@@ -8,21 +8,21 @@ namespace LoadBadger.ConsolerRunner
     public class PerSecondHandlerLoop : FrequencyLoop
     {
         private readonly TimeSpan _duration;
-        private readonly HttpExecutor _executor;
+        private readonly IExecutor _executor;
 
-        private readonly decimal _excutionsPerFrame;
-        private readonly decimal _expectedExecutions;
+        private readonly double _excutionsPerFrame;
+        private readonly double _expectedExecutions;
 
-        public PerSecondHandlerLoop(decimal perSecond, TimeSpan duration, HttpExecutor executor) : base(30)
+        public PerSecondHandlerLoop(double perSecond, TimeSpan duration, IExecutor executor) : base(240)
         {
             _duration = duration;
             _executor = executor;
-            _excutionsPerFrame = perSecond / 30;
-            _expectedExecutions = perSecond * (decimal) duration.TotalSeconds;
+            _excutionsPerFrame = perSecond / 240;
+            _expectedExecutions = perSecond * duration.TotalSeconds;
         }
 
-        private decimal _totalExecutions;
-        private decimal _remainder;
+        private double _totalExecutions;
+        private double _remainder;
 
         protected override IEnumerable<Task> OnUpdate(CancellationTokenSource cancellationToken)
         {
@@ -32,8 +32,8 @@ namespace LoadBadger.ConsolerRunner
                 return new List<Task>();
             }
 
-            decimal current = _excutionsPerFrame + _remainder;
-            decimal truncated = Math.Truncate(current);
+            double current = _excutionsPerFrame + _remainder;
+            double truncated = Math.Truncate(current);
             _remainder += _excutionsPerFrame - truncated;
 
             var tasks = new List<Task>();

@@ -9,15 +9,12 @@ namespace LoadBadger.ConsolerRunner
 {
     public abstract class FrequencyLoop
     {
-        private int _spinCounter;
-        private readonly double _desiredFps;
         private readonly TimeSpan _frameTime;
 
         public Stopwatch Stopwatch { get; } = new Stopwatch();
 
         protected FrequencyLoop(double fps)
         {
-            _desiredFps = fps;
             _frameTime = TimeSpan.FromSeconds(1.0 / fps);
         }
         
@@ -39,10 +36,7 @@ namespace LoadBadger.ConsolerRunner
                     updateTime -= _frameTime;
                     var results = OnUpdate(cancellationToken).ToList();
                     tasks.AddRange(results);
-                    _spinCounter = 0;
                 }
-                
-                _spinCounter++;
                 
                 // On some systems, this returns in 1 millisecond
                 // on others, it may return in much higher.

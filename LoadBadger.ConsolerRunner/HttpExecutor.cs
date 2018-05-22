@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace LoadBadger.ConsolerRunner
 {
-    public class HttpExecutor
+    public class HttpExecutor : IExecutor
     {
         public TimedHandler TimedHandler { get; }
 
@@ -12,9 +12,9 @@ namespace LoadBadger.ConsolerRunner
             TimedHandler = timedHandler;
         }
 
-        public Task<HttpResponseMessage> ExecuteAsync()
+        public Task ExecuteAsync()
         {
-            HttpClient httpClient = new HttpClient(TimedHandler);
+            var httpClient = new HttpClient(TimedHandler);
             return httpClient.GetAsync("http://localhost");
         }
     }

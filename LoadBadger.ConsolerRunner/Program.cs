@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace LoadBadger.ConsolerRunner
 {
@@ -10,6 +12,10 @@ namespace LoadBadger.ConsolerRunner
     {
         static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+                .CreateLogger();
+
             var timedHandler = new TimedHandler();
             var httpExecutor = new HttpExecutor(timedHandler);
             List<Task> tasks = new List<Task>();
@@ -19,7 +25,7 @@ namespace LoadBadger.ConsolerRunner
                 var ctx = new CancellationTokenSource();
 
                 var ramped = new LinearRampedHandlerLoop(httpExecutor);
-                ramped.Execute(ctx);
+                tasks = ramped.Execute(start: 10, end: 20, duration: TimeSpan.FromSeconds(30), ctx: ctx);
 
                 //var perSecond = new PerSecondHandlerLoop(10, TimeSpan.FromSeconds(30), httpExecutor);
                 //tasks = perSecond.Exeucte(ctx.Token);
@@ -36,16 +42,17 @@ namespace LoadBadger.ConsolerRunner
 
                     var snapshot = timedHandler.Requests.Select(r => new RequestTime(r)).ToList();
 
-                    Console.WriteLine("Total Requests Sent: " + snapshot.Count);
-                    Console.WriteLine("Avg Response Time: {0:N}ms", snapshot.Average(r => r.Total.TotalMilliseconds));
-                    Console.WriteLine("Total RPS: {0:N}", snapshot
-                        .GroupBy(r => new DateTime(r.Start.Year, r.Start.Month, r.Start.Day, r.Start.Hour,
-                            r.Start.Minute, r.Start.Second))
-                        .Average(r => r.Count()));
+                    Log.Information("Total Requests Sent: {total}", snapshot.Count);
+                    Log.Information("Avg Response Time: {0:N}ms", snapshot.Average(r => r.Total.TotalMilliseconds));
 
-                    Console.WriteLine("Requests < 800ms: " + snapshot.Count(r => r.Total.TotalMilliseconds < 800));
-                    Console.WriteLine("Requests > 800ms <= 1000ms: " + snapshot.Count(r => r.Total.TotalMilliseconds > 800 && r.Total.TotalMilliseconds <= 1000));
-                    Console.WriteLine("Requests > 1000ms: " + snapshot.Count(r => r.Total.TotalMilliseconds > 1000));
+                    var averageRps = snapshot
+                        .GroupBy(r => new DateTime(r.Start.Year, r.Start.Month, r.Start.Day, r.Start.Hour, r.Start.Minute, r.Start.Second))
+                        .Average(r => r.Count());
+
+                    Log.Information("Average RPS: {0:N}", averageRps);
+                    Log.Information("Requests < 800ms: {total}", snapshot.Count(r => r.Total.TotalMilliseconds < 800));
+                    Log.Warning("Requests > 800ms <= 1000ms: {total}", snapshot.Count(r => r.Total.TotalMilliseconds > 800 && r.Total.TotalMilliseconds <= 1000));
+                    Log.Error("Requests > 1000ms: {total}", snapshot.Count(r => r.Total.TotalMilliseconds > 1000));
 
                     Thread.Sleep(1000);
                     Console.Clear();
@@ -57,8 +64,7 @@ namespace LoadBadger.ConsolerRunner
 
             foreach (var request in timedHandler.Requests)
             {
-                Console.WriteLine(
-                    $"Request: {request.Start.Ticks} - {request.End.Ticks} in {request.Total.TotalMilliseconds}ms");
+                Console.WriteLine($"Request: {request.Start.Ticks} - {request.End.Ticks} in {request.Total.TotalMilliseconds}ms");
             }
 
             Console.WriteLine("Total:" + timedHandler.Requests.Count);
