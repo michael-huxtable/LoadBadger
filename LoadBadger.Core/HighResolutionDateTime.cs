@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace LoadBadger.ConsolerRunner
+namespace LoadBadger.Core
 {
     public class HighResolutionDateTime
     {

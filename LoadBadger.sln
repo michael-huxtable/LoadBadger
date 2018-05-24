@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadBadger.ConsolerRunner", "LoadBadger.ConsolerRunner\LoadBadger.ConsolerRunner.csproj", "{DA016B56-EE73-4F3A-99E5-FDBD2B76F76F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadBadger.Console.Core", "LoadBadger.Console.Core\LoadBadger.Console.Core.csproj", "{A40559A5-468A-412E-9EB3-BF62C14F8E61}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadBadger.Core", "LoadBadger.Core\LoadBadger.Core.csproj", "{D4035FE1-59C0-425C-AE03-54B8A862BA9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DA016B56-EE73-4F3A-99E5-FDBD2B76F76F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DA016B56-EE73-4F3A-99E5-FDBD2B76F76F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DA016B56-EE73-4F3A-99E5-FDBD2B76F76F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DA016B56-EE73-4F3A-99E5-FDBD2B76F76F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A40559A5-468A-412E-9EB3-BF62C14F8E61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A40559A5-468A-412E-9EB3-BF62C14F8E61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A40559A5-468A-412E-9EB3-BF62C14F8E61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A40559A5-468A-412E-9EB3-BF62C14F8E61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4035FE1-59C0-425C-AE03-54B8A862BA9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4035FE1-59C0-425C-AE03-54B8A862BA9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4035FE1-59C0-425C-AE03-54B8A862BA9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4035FE1-59C0-425C-AE03-54B8A862BA9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

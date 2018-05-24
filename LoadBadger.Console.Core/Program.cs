@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LoadBadger.Core;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
-namespace LoadBadger.ConsolerRunner
+namespace LoadBadger.Console.Core
 {
     class Program
     {
@@ -25,7 +26,7 @@ namespace LoadBadger.ConsolerRunner
                 var ctx = new CancellationTokenSource();
 
                 var ramped = new LinearRampedHandlerLoop(httpExecutor);
-                tasks = ramped.Execute(start: 10, end: 20, duration: TimeSpan.FromSeconds(30), ctx: ctx);
+                tasks = ramped.Execute(start: 1000, end: 5000, duration: TimeSpan.FromMinutes(1), ctx: ctx);
 
                 //var perSecond = new PerSecondHandlerLoop(10, TimeSpan.FromSeconds(30), httpExecutor);
                 //tasks = perSecond.Exeucte(ctx.Token);
@@ -55,19 +56,19 @@ namespace LoadBadger.ConsolerRunner
                     Log.Error("Requests > 1000ms: {total}", snapshot.Count(r => r.Total.TotalMilliseconds > 1000));
 
                     Thread.Sleep(1000);
-                    Console.Clear();
+                    System.Console.Clear();
                 }
             });
 
-            Console.ReadKey();
+            System.Console.ReadKey();
             Task.WaitAll(tasks.ToArray());
 
             foreach (var request in timedHandler.Requests)
             {
-                Console.WriteLine($"Request: {request.Start.Ticks} - {request.End.Ticks} in {request.Total.TotalMilliseconds}ms");
+                System.Console.WriteLine($"Request: {request.Start.Ticks} - {request.End.Ticks} in {request.Total.TotalMilliseconds}ms");
             }
 
-            Console.WriteLine("Total:" + timedHandler.Requests.Count);
+            System.Console.WriteLine("Total:" + timedHandler.Requests.Count);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LoadBadger.ConsolerRunner
+namespace LoadBadger.Core
 {
     public class RequestTime
     {

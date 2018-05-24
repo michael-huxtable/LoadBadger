@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LoadBadger.ConsolerRunner
+namespace LoadBadger.Core
 {
     public class PerSecondHandlerLoop : FrequencyLoop
     {

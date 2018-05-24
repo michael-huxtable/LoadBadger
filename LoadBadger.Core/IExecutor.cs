@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace LoadBadger.ConsolerRunner
+namespace LoadBadger.Core
 {
     public interface IExecutor
     {

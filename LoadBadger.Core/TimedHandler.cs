@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LoadBadger.ConsolerRunner
+namespace LoadBadger.Core
 {
     public class TimedHandler : DelegatingHandler
     {
