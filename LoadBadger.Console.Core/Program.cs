@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LoadBadger.Core;
@@ -17,7 +16,9 @@ namespace LoadBadger.Console.Core
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
                 .CreateLogger();
 
-            var timedHandler = new TimedHandler();
+            var reporter = new RequestTimeReporter();
+
+            var timedHandler = new TimedHandler(reporter.Requests);
             var httpExecutor = new HttpExecutor(timedHandler);
             List<Task> tasks = new List<Task>();
 
@@ -36,26 +37,9 @@ namespace LoadBadger.Console.Core
             {
                 while (true)
                 {
-                    if (!timedHandler.Requests.Any())
-                    {
-                        continue;
-                    }
+                    reporter.GetStatistics();
 
-                    var snapshot = timedHandler.Requests.Select(r => new RequestTime(r)).ToList();
-
-                    Log.Information("Total Requests Sent: {total}", snapshot.Count);
-                    Log.Information("Avg Response Time: {0:N}ms", snapshot.Average(r => r.Total.TotalMilliseconds));
-
-                    var averageRps = snapshot
-                        .GroupBy(r => new DateTime(r.Start.Year, r.Start.Month, r.Start.Day, r.Start.Hour, r.Start.Minute, r.Start.Second))
-                        .Average(r => r.Count());
-
-                    Log.Information("Average RPS: {0:N}", averageRps);
-                    Log.Information("Requests < 800ms: {total}", snapshot.Count(r => r.Total.TotalMilliseconds < 800));
-                    Log.Warning("Requests > 800ms <= 1000ms: {total}", snapshot.Count(r => r.Total.TotalMilliseconds > 800 && r.Total.TotalMilliseconds <= 1000));
-                    Log.Error("Requests > 1000ms: {total}", snapshot.Count(r => r.Total.TotalMilliseconds > 1000));
-
-                    Thread.Sleep(1000);
+                    Thread.Sleep(2000);
                     System.Console.Clear();
                 }
             });
@@ -63,12 +47,12 @@ namespace LoadBadger.Console.Core
             System.Console.ReadKey();
             Task.WaitAll(tasks.ToArray());
 
-            foreach (var request in timedHandler.Requests)
+            foreach (var request in reporter.Requests)
             {
                 System.Console.WriteLine($"Request: {request.Start.Ticks} - {request.End.Ticks} in {request.Total.TotalMilliseconds}ms");
             }
 
-            System.Console.WriteLine("Total:" + timedHandler.Requests.Count);
+            System.Console.WriteLine("Total:" + reporter.Requests.Count);
         }
     }
 }

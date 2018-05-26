@@ -42,6 +42,7 @@ namespace LoadBadger.Core
                 // on others, it may return in much higher.
                 // If so, you should just comment this out, and let the main loop
                 // spin to wait out the timer.
+
                 Thread.Sleep(1);
             }
 
