@@ -24,27 +24,22 @@ namespace LoadBadger.Core
         private double _totalExecutions;
         private double _remainder;
 
-        protected override IEnumerable<Task> OnUpdate(CancellationTokenSource cancellationToken)
-        {
+        protected override void OnUpdate(CancellationTokenSource cancellationToken)
+        { 
             if (Stopwatch.Elapsed >= _duration && _totalExecutions >= _expectedExecutions)
             {
                 cancellationToken.Cancel();
-                return new List<Task>();
             }
 
             double current = _excutionsPerFrame + _remainder;
             double truncated = Math.Truncate(current);
             _remainder += _excutionsPerFrame - truncated;
-
-            var tasks = new List<Task>();
-
+        
             for (int i = 0; i < truncated; ++i)
             {
                 _totalExecutions++;
-                tasks.Add(_executor.ExecuteAsync());
+                _executor.ExecuteAsync(cancellationToken);
             }
-
-            return tasks;
         }
     }
 }

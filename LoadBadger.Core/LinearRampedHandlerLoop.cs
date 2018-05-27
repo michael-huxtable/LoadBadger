@@ -6,41 +6,45 @@ using Serilog;
 
 namespace LoadBadger.Core
 {
-    public class LinearRampedHandlerLoop
+    public class LinearRampedHandlerLoop : IExecutor
     {
+        private readonly int _start;
+        private readonly int _end;
+        private readonly TimeSpan _duration;
         private readonly IExecutor _executor;
 
-        public LinearRampedHandlerLoop(IExecutor executor)
+        public LinearRampedHandlerLoop(int start, int end, TimeSpan duration, IExecutor executor)
         {
+            _start = start;
+            _end = end;
+            _duration = duration;
             _executor = executor;
         }
 
-        public List<Task> Execute(int start, int end, TimeSpan duration, CancellationTokenSource ctx)
+        public Task ExecuteAsync(CancellationTokenSource ctx)
         {
             TimeSpan rampInterval = TimeSpan.FromSeconds(1);
 
-            double rampCount = duration.TotalSeconds / rampInterval.TotalSeconds;
+            double rampCount = _duration.TotalSeconds / rampInterval.TotalSeconds;
 
-            int step = end - start;
+            int step = _end - _start;
             double stepCount = step / rampCount;
-            double requestsPerSecond = start;
+            double requestsPerSecond = _start;
 
-            var tasks = new List<Task>();
-
-            for (TimeSpan i = TimeSpan.Zero; i < duration; i += rampInterval)
+            for (TimeSpan i = TimeSpan.Zero; i < _duration; i += rampInterval)
             {
-                Log.Information("Requests Per Second: {perSecond}, Time: {i}", requestsPerSecond, i);
+                Log.Information("CompletedRequests Per Second: {perSecond}, Time: {i}", requestsPerSecond, i);
 
                 if (requestsPerSecond > 0)
                 {   
                     var loop = new PerSecondHandlerLoop(requestsPerSecond, rampInterval, _executor);
-                    tasks.AddRange(loop.Exeucte(new CancellationTokenSource()));
+                    loop.ExecuteAsync(new CancellationTokenSource());
                 }
 
                 requestsPerSecond += stepCount;
             }
 
-            return tasks;
+            return Task.CompletedTask;
         }
     }
 }
