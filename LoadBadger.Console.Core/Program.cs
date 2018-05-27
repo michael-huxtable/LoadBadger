@@ -22,17 +22,18 @@ namespace LoadBadger.Console.Core
             var timedHandler = new TimedHandler(reporter.CompletedRequests);
             var httpExecutor = new HttpExecutor(timedHandler, reporter);
 
-            List<Task> tasks = new List<Task>();
-
             Task.Run(() =>
             {
                 var ctx = new CancellationTokenSource();
 
-                var ramped = new LinearRampedHandlerLoop(start: 50, end: 100, duration: TimeSpan.FromMinutes(1), executor: httpExecutor);
-                return ramped.ExecuteAsync(ctx);
+                var loadTest = new LoadTest(new List<IExecutor>()
+                {
+                    new LinearRampedHandlerLoop(start: 50, end: 100, duration: TimeSpan.FromMinutes(1), executor: httpExecutor),
+                    new FunctionExecutor(() => Task.Delay(TimeSpan.FromSeconds(20), ctx.Token)),
+                    new PerSecondHandlerLoop(100, TimeSpan.FromMinutes(1), executor: httpExecutor)
+                });
 
-                //var perSecond = new PerSecondHandlerLoop(10, TimeSpan.FromSeconds(30), httpExecutor);
-                //tasks = perSecond.Exeucte(ctx.Token);
+                return loadTest.ExecuteAsync();
             });
 
             Task.Run(() =>

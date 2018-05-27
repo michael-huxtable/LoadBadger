@@ -13,7 +13,7 @@ namespace LoadBadger.Core
             _steps = steps;
         }
 
-        public async Task Run()
+        public async Task ExecuteAsync()
         {
             var ctx = new CancellationTokenSource();
 
