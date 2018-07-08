@@ -9,7 +9,7 @@ namespace LoadBadger.Core
     {
         private readonly ConcurrentBag<RequestTime> _requests;
 
-        public TimedHandler(ConcurrentBag<RequestTime> requests) : base(new HttpClientHandler() { })
+        public TimedHandler(ConcurrentBag<RequestTime> requests) : base(new HttpClientHandler())
         {
             _requests = requests;
         }

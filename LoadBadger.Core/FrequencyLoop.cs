@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace LoadBadger.Core
 {
-    public abstract class FrequencyLoop : IExecutor
+    public abstract class FrequencyLoop
     {
         private readonly TimeSpan _frameTime;
         public Stopwatch Stopwatch { get; } = new Stopwatch();
@@ -15,7 +14,7 @@ namespace LoadBadger.Core
             _frameTime = TimeSpan.FromSeconds(1.0 / fps);
         }
         
-        public Task ExecuteAsync(CancellationTokenSource cancellationToken)
+        public void Execute(CancellationTokenSource cancellationToken)
         {
             Stopwatch.Start();
             var last = Stopwatch.Elapsed;
@@ -39,8 +38,6 @@ namespace LoadBadger.Core
                 // spin to wait out the timer.
                 Thread.Sleep(1);
             }
-
-            return Task.CompletedTask;
         }
 
         protected abstract void OnUpdate(CancellationTokenSource cancellationTokenSource);

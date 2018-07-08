@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using LoadBadger.Core;
@@ -20,20 +21,14 @@ namespace LoadBadger.Console.Core
             var reporter = new RequestReporter();
 
             var timedHandler = new TimedHandler(reporter.CompletedRequests);
-            var httpExecutor = new HttpExecutor(timedHandler, reporter);
+            var httpExecutor = new HttpExecutor(new HttpClient(timedHandler), reporter);
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                var ctx = new CancellationTokenSource();
-
-                var loadTest = new LoadTest(new List<IExecutor>()
-                {
-                    new LinearRampedHandlerLoop(start: 50, end: 100, duration: TimeSpan.FromMinutes(1), executor: httpExecutor),
-                    new FunctionExecutor(() => Task.Delay(TimeSpan.FromSeconds(20), ctx.Token)),
-                    new PerSecondHandlerLoop(100, TimeSpan.FromMinutes(1), executor: httpExecutor)
-                });
-
-                return loadTest.ExecuteAsync();
+                var cancellationToken = new CancellationTokenSource();
+                new LinearRampedHandlerLoop(start: 50, end: 100, duration: TimeSpan.FromMinutes(1), executor: httpExecutor).Execute(cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(20), cancellationToken.Token);
+                new PerSecondHandlerLoop(100, TimeSpan.FromMinutes(1), executor: httpExecutor).Execute(cancellationToken);
             });
 
             Task.Run(() =>

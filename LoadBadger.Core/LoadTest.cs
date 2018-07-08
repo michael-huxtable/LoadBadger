@@ -1,9 +1,21 @@
 ﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LoadBadger.Core
 {
+    public class LoadTestUser : IExecutor
+    {
+        private HttpClient _httpClient = new HttpClient();
+
+
+        public Task ExecuteAsync(CancellationTokenSource cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
     public class LoadTest
     {
         private readonly IEnumerable<IExecutor> _steps;
@@ -13,14 +25,18 @@ namespace LoadBadger.Core
             _steps = steps;
         }
 
-        public async Task ExecuteAsync()
+        public Task ExecuteAsync()
         {
             var ctx = new CancellationTokenSource();
-
-            foreach (IExecutor executor in _steps)
+            
+            return Task.Run(async () =>
             {
-                await executor.ExecuteAsync(ctx);
-            }
+                foreach (IExecutor executor in _steps)
+                {
+                    await executor.ExecuteAsync(ctx);
+                }
+            }, 
+            ctx.Token);
         }
     }
 }

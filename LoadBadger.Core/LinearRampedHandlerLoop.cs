@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Serilog;
 
 namespace LoadBadger.Core
 {
-    public class LinearRampedHandlerLoop : IExecutor
+    public class LinearRampedHandlerLoop
     {
         private readonly int _start;
         private readonly int _end;
@@ -21,7 +19,7 @@ namespace LoadBadger.Core
             _executor = executor;
         }
 
-        public Task ExecuteAsync(CancellationTokenSource ctx)
+        public void Execute(CancellationTokenSource ctx)
         {
             TimeSpan rampInterval = TimeSpan.FromSeconds(1);
 
@@ -30,21 +28,19 @@ namespace LoadBadger.Core
             int step = _end - _start;
             double stepCount = step / rampCount;
             double requestsPerSecond = _start;
-
+            
             for (TimeSpan i = TimeSpan.Zero; i < _duration; i += rampInterval)
             {
                 Log.Information("CompletedRequests Per Second: {perSecond}, Time: {i}", requestsPerSecond, i);
 
                 if (requestsPerSecond > 0)
-                {   
+                {
                     var loop = new PerSecondHandlerLoop(requestsPerSecond, rampInterval, _executor);
-                    loop.ExecuteAsync(new CancellationTokenSource());
+                    loop.Execute(new CancellationTokenSource());
                 }
 
                 requestsPerSecond += stepCount;
             }
-
-            return Task.CompletedTask;
         }
     }
 }
