@@ -26,7 +26,7 @@ namespace LoadBadger.Console.Core
             Task.Run(async () =>
             {
                 var cancellationToken = new CancellationTokenSource();
-                new LinearRampedHandlerLoop(start: 50, end: 100, duration: TimeSpan.FromMinutes(1), executor: httpExecutor).Execute(cancellationToken);
+                new LinearRampedHandlerLoop(start: 3000, end: 5000, duration: TimeSpan.FromMinutes(1), executor: httpExecutor).Execute(cancellationToken);
                 await Task.Delay(TimeSpan.FromSeconds(20), cancellationToken.Token);
                 new PerSecondHandlerLoop(100, TimeSpan.FromMinutes(1), executor: httpExecutor).Execute(cancellationToken);
             });
