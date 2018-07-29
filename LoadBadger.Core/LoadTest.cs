@@ -7,11 +7,17 @@ namespace LoadBadger.Core
 {
     public class LoadTestUser : IExecutor
     {
-        private HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
 
+        public LoadTestUser(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
 
         public Task ExecuteAsync(CancellationTokenSource cancellationToken)
         {
+            
+
             return Task.CompletedTask;
         }
     }

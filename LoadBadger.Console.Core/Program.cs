@@ -19,9 +19,8 @@ namespace LoadBadger.Console.Core
                 .CreateLogger();
 
             var reporter = new RequestReporter();
-
-            var timedHandler = new TimedHandler(reporter.CompletedRequests);
-            var httpExecutor = new HttpExecutor(new HttpClient(timedHandler), reporter);
+            var timedHandler = new TimedHandler(reporter, new SocketsHttpHandler());
+            var httpExecutor = new HttpExecutor(new HttpClient(timedHandler));
 
             Task.Run(async () =>
             {

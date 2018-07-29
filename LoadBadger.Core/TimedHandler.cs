@@ -7,20 +7,26 @@ namespace LoadBadger.Core
 {
     public class TimedHandler : DelegatingHandler
     {
-        private readonly ConcurrentBag<RequestTime> _requests;
+        private readonly IRequestReporter _requestReporter;
 
-        public TimedHandler(ConcurrentBag<RequestTime> requests) : base(new SocketsHttpHandler())
+        public TimedHandler(IRequestReporter requestReporter, HttpMessageHandler innerHandler) : base(innerHandler)
         {
-            _requests = requests;
+            _requestReporter = requestReporter;
         }
         
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var startDate = HighResolutionDateTime.UtcNow;
-            var response = await base.SendAsync(request, cancellationToken);
-            var endDate = HighResolutionDateTime.UtcNow;
             
-            _requests.Add(new RequestTime(startDate, endDate));
+            var task = base.SendAsync(request, cancellationToken);
+            _requestReporter.InProgressRequests.Add(task);
+            var response = await task;
+            
+            var endDate = HighResolutionDateTime.UtcNow;
+
+            var requestTime = new RequestTime(startDate, endDate);
+            _requestReporter.CompletedRequests.Add(requestTime);
+            
             return response;
         }
     }
