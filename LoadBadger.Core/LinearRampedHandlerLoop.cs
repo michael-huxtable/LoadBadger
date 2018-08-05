@@ -1,17 +1,27 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Serilog;
 
 namespace LoadBadger.Core
 {
+    public static class LinearRampedHandlerLoopExtensions
+    {
+        public static void LinearRamp(this Func<Task> task, int start, int end, TimeSpan duration)
+        {
+            var loop = new LinearRampedHandlerLoop(start, end, duration, task);
+            loop.Execute(new CancellationTokenSource());
+        }
+    }
+
     public class LinearRampedHandlerLoop
     {
         private readonly int _start;
         private readonly int _end;
         private readonly TimeSpan _duration;
-        private readonly IExecutor _executor;
+        private readonly Func<Task> _executor;
 
-        public LinearRampedHandlerLoop(int start, int end, TimeSpan duration, IExecutor executor)
+        public LinearRampedHandlerLoop(int start, int end, TimeSpan duration, Func<Task> executor)
         {
             _start = start;
             _end = end;

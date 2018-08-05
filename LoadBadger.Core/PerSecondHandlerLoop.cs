@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LoadBadger.Core
 {
     public class PerSecondHandlerLoop : FrequencyLoop
     {
         private readonly TimeSpan _duration;
-        private readonly IExecutor _executor;
+        private readonly Func<Task> _executor;
 
         private readonly double _excutionsPerFrame;
         private readonly double _expectedExecutions;
 
-        public PerSecondHandlerLoop(double perSecond, TimeSpan duration, IExecutor executor) : base(240)
+        public PerSecondHandlerLoop(double perSecond, TimeSpan duration, Func<Task> executor) : base(240)
         {
             _duration = duration;
             _executor = executor;
@@ -36,7 +37,7 @@ namespace LoadBadger.Core
             for (int i = 0; i < truncated; ++i)
             {
                 _totalExecutions++;
-                _executor.ExecuteAsync(cancellationToken);
+                _executor();
             }
         }
     }

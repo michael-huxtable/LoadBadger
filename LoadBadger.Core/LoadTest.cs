@@ -1,48 +1,39 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LoadBadger.Core
 {
-    public class LoadTestUser : IExecutor
+    public abstract class LoadTest
     {
-        private readonly HttpClient _httpClient;
+        private readonly IRequestReporter _requestReporter;
+        protected readonly HttpClient HttpClient;
 
-        public LoadTestUser(HttpClient httpClient)
+        protected LoadTest(IRequestReporter requestReporter)
         {
-            _httpClient = httpClient;
+            _requestReporter = requestReporter;
+            var timedHandler = new TimedHandler(_requestReporter, new SocketsHttpHandler());
+            HttpClient = new HttpClient(timedHandler);
         }
 
-        public Task ExecuteAsync(CancellationTokenSource cancellationToken)
+        public async Task Run()
         {
-            
-
-            return Task.CompletedTask;
-        }
-    }
-
-    public class LoadTest
-    {
-        private readonly IEnumerable<IExecutor> _steps;
-
-        public LoadTest(IEnumerable<IExecutor> steps)
-        {
-            _steps = steps;
-        }
-
-        public Task ExecuteAsync()
-        {
-            var ctx = new CancellationTokenSource();
-            
-            return Task.Run(async () =>
+            using (GetReporterTimer())
             {
-                foreach (IExecutor executor in _steps)
-                {
-                    await executor.ExecuteAsync(ctx);
-                }
+                await GetLoadTest();
+            }
+        }
+
+        protected abstract Task GetLoadTest();
+
+        private Timer GetReporterTimer()
+        {
+            return new Timer(state =>
+            {
+                System.Console.Clear();
+                _requestReporter.GetStatistics();
             }, 
-            ctx.Token);
+            null, 0, 2000);
         }
     }
 }

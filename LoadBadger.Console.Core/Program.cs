@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +9,25 @@ using Serilog.Sinks.SystemConsole.Themes;
 
 namespace LoadBadger.Console.Core
 {
+    public class SimpleLoadTest : LoadTest
+    {
+        public SimpleLoadTest() : base(new RequestReporter())
+        {}
+
+        protected override Task GetLoadTest()
+        {
+            Func<Task> test = async () =>
+            {
+                var data = await HttpClient.GetAsync("http://localhost");
+                data.EnsureSuccessStatusCode();
+                await data.Content.ReadAsStringAsync();
+            };
+
+            test.LinearRamp(start: 150, end: 200, duration: TimeSpan.FromMinutes(1));
+            return Task.CompletedTask;
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
@@ -18,16 +36,34 @@ namespace LoadBadger.Console.Core
                 .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
                 .CreateLogger();
 
+            SimpleLoadTest test = new SimpleLoadTest();
+            test.Run().GetAwaiter().GetResult();
+            return;
+
             var reporter = new RequestReporter();
             var timedHandler = new TimedHandler(reporter, new SocketsHttpHandler());
-            var httpExecutor = new HttpExecutor(new HttpClient(timedHandler));
+            var httpClient = new HttpClient(timedHandler);
+
+            Func<Task> httpExecutor = () => httpClient.GetAsync("http://localhost", CancellationToken.None);
 
             Task.Run(async () =>
             {
                 var cancellationToken = new CancellationTokenSource();
-                new LinearRampedHandlerLoop(start: 3000, end: 5000, duration: TimeSpan.FromMinutes(1), executor: httpExecutor).Execute(cancellationToken);
+
+                Func<Task> task = async () =>
+                {
+                    var data = await httpClient.GetAsync("http://localhost", cancellationToken.Token);
+                    data.EnsureSuccessStatusCode();
+                    await data.Content.ReadAsStringAsync();
+                };
+
+                task.LinearRamp(start: 3000, end: 5000, duration: TimeSpan.FromMinutes(1));
+                
+                new LinearRampedHandlerLoop(start: 3000, end: 5000, duration: TimeSpan.FromMinutes(1), executor: task)
+                    .Execute(cancellationToken);
+
                 await Task.Delay(TimeSpan.FromSeconds(20), cancellationToken.Token);
-                new PerSecondHandlerLoop(100, TimeSpan.FromMinutes(1), executor: httpExecutor).Execute(cancellationToken);
+                new PerSecondHandlerLoop(100, TimeSpan.FromMinutes(1), executor: task).Execute(cancellationToken);
             });
 
             Task.Run(() =>
