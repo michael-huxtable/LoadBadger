@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,22 +8,17 @@ using Serilog.Sinks.SystemConsole.Themes;
 
 namespace LoadBadger.Console.Core
 {
-    public class SimpleLoadTest : LoadTest
+    public class SimpleLoadTest
     {
-        public SimpleLoadTest() : base(new RequestReporter())
-        {}
+        public Func<Task> GetTaskFunc => GetTest;
 
-        protected override Task GetLoadTest()
+        public async Task GetTest()
         {
-            Func<Task> test = async () =>
-            {
-                var data = await HttpClient.GetAsync("http://localhost");
-                data.EnsureSuccessStatusCode();
-                await data.Content.ReadAsStringAsync();
-            };
+            HttpClient httpClient = LoadTestHttp.BuildClient();
 
-            test.LinearRamp(start: 150, end: 200, duration: TimeSpan.FromMinutes(1));
-            return Task.CompletedTask;
+            var data = await httpClient.GetAsync("http://localhost");
+            data.EnsureSuccessStatusCode();
+            await data.Content.ReadAsStringAsync();
         }
     }
 
@@ -36,56 +30,34 @@ namespace LoadBadger.Console.Core
                 .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
                 .CreateLogger();
 
-            SimpleLoadTest test = new SimpleLoadTest();
-            test.Run().GetAwaiter().GetResult();
-            return;
-
-            var reporter = new RequestReporter();
-            var timedHandler = new TimedHandler(reporter, new SocketsHttpHandler());
-            var httpClient = new HttpClient(timedHandler);
-
-            Func<Task> httpExecutor = () => httpClient.GetAsync("http://localhost", CancellationToken.None);
-
-            Task.Run(async () =>
+            using (var timer = GetReporterTimer())
             {
-                var cancellationToken = new CancellationTokenSource();
+                var two = new SimpleLoadTest();
+                two.GetTaskFunc.LinearRamp(500, 1000, TimeSpan.FromMinutes(1));
 
-                Func<Task> task = async () =>
+                System.Console.ReadKey();
+
+                var requestReporter = LoadTestHttp.RequestReporter;
+                Task.WaitAll(requestReporter.InProgressRequests.ToArray());
+
+                foreach (var request in requestReporter.CompletedRequests)
                 {
-                    var data = await httpClient.GetAsync("http://localhost", cancellationToken.Token);
-                    data.EnsureSuccessStatusCode();
-                    await data.Content.ReadAsStringAsync();
-                };
-
-                task.LinearRamp(start: 3000, end: 5000, duration: TimeSpan.FromMinutes(1));
-                
-                new LinearRampedHandlerLoop(start: 3000, end: 5000, duration: TimeSpan.FromMinutes(1), executor: task)
-                    .Execute(cancellationToken);
-
-                await Task.Delay(TimeSpan.FromSeconds(20), cancellationToken.Token);
-                new PerSecondHandlerLoop(100, TimeSpan.FromMinutes(1), executor: task).Execute(cancellationToken);
-            });
-
-            Task.Run(() =>
-            {
-                while (true)
-                {
-                    reporter.GetStatistics();
-
-                    Thread.Sleep(2000);
-                    System.Console.Clear();
+                    System.Console.WriteLine(
+                        $"Request: {request.Start.Ticks} - {request.End.Ticks} in {request.Total.TotalMilliseconds}ms");
                 }
-            });
 
-            System.Console.ReadKey();
-            Task.WaitAll(reporter.InProgressRequests.ToArray());
-
-            foreach (var request in reporter.CompletedRequests)
-            {
-                System.Console.WriteLine($"Request: {request.Start.Ticks} - {request.End.Ticks} in {request.Total.TotalMilliseconds}ms");
+                System.Console.WriteLine("Total:" + requestReporter.CompletedRequests.Count);
             }
+        }
 
-            System.Console.WriteLine("Total:" + reporter.CompletedRequests.Count);
+        private static Timer GetReporterTimer()
+        {
+            return new Timer(state =>
+            {
+                System.Console.Clear();
+                LoadTestHttp.RequestReporter.GetStatistics();
+            },
+            null, 0, 2000);
         }
     }
 }
