@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using LoadBadger.Core;
-using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 
 namespace LoadBadger.Console.Core
 {
-    public class SimpleLoadTest
+    public class Test : LoadTest
     {
-        public Func<Task> GetTaskFunc => GetTest;
+        protected override void Execute()
+        {
+            Func<Task> scenario = Scenario;
+            scenario.LinearRamp(500, 1000, TimeSpan.FromMinutes(1));
+        }
 
-        public async Task GetTest()
+        public async Task Scenario()
         {
             HttpClient httpClient = LoadTestHttp.BuildClient();
 
@@ -26,38 +27,8 @@ namespace LoadBadger.Console.Core
     {
         static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
-                .CreateLogger();
-
-            using (var timer = GetReporterTimer())
-            {
-                var two = new SimpleLoadTest();
-                two.GetTaskFunc.LinearRamp(500, 1000, TimeSpan.FromMinutes(1));
-
-                System.Console.ReadKey();
-
-                var requestReporter = LoadTestHttp.RequestReporter;
-                Task.WaitAll(requestReporter.InProgressRequests.ToArray());
-
-                foreach (var request in requestReporter.CompletedRequests)
-                {
-                    System.Console.WriteLine(
-                        $"Request: {request.Start.Ticks} - {request.End.Ticks} in {request.Total.TotalMilliseconds}ms");
-                }
-
-                System.Console.WriteLine("Total:" + requestReporter.CompletedRequests.Count);
-            }
-        }
-
-        private static Timer GetReporterTimer()
-        {
-            return new Timer(state =>
-            {
-                System.Console.Clear();
-                LoadTestHttp.RequestReporter.GetStatistics();
-            },
-            null, 0, 2000);
+            var test = new Test();
+            test.Run();
         }
     }
 }
