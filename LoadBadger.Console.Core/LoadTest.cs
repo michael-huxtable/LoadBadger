@@ -17,7 +17,7 @@ namespace LoadBadger.Console.Core
 
             using (GetReporterTimer())
             {
-                var task = Task.Run((Action)Execute);
+                Task.Run((Action)Execute);
                 System.Console.ReadKey();
 
                 var requestReporter = LoadTestHttp.RequestReporter;

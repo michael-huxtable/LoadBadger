@@ -30,8 +30,7 @@ namespace LoadBadger.Core
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((RequestTime) obj);
+            return obj.GetType() == GetType() && Equals((RequestTime) obj);
         }
 
         public override int GetHashCode()
