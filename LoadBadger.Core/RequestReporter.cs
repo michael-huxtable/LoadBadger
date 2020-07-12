@@ -19,7 +19,7 @@ namespace LoadBadger.Core
                 return;
             }
 
-            var snapshot = CompletedRequests.Select(r => new RequestTime(r)).ToList();
+            var snapshot = CompletedRequests.ToList();
 
             Log.Information("Total CompletedRequests Sent: {total}", snapshot.Count);
             Log.Information("Avg Response Time: {0:N}ms", snapshot.Average(r => r.Total.TotalMilliseconds));

@@ -35,10 +35,10 @@ namespace LoadBadger.Core
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return (Start.GetHashCode() * 397) ^ End.GetHashCode();
-            }
+            var hashCode = new HashCode();
+            hashCode.Add(Start);
+            hashCode.Add(End);
+            return hashCode.ToHashCode();
         }
     }
 }

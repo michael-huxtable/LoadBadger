@@ -7,6 +7,7 @@ namespace LoadBadger.Core
     public abstract class FrequencyLoop
     {
         private readonly TimeSpan _frameTime;
+
         public Stopwatch Stopwatch { get; } = new Stopwatch();
 
         protected FrequencyLoop(double fps)
